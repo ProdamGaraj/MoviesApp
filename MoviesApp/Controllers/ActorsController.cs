@@ -73,7 +73,7 @@ namespace MoviesApp.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([Bind("Title,ReleaseDate,Genre,Price")] InputActorViewModel inputModel)
+        public IActionResult Create([Bind("FirstName,LastName,BirthDate")] InputActorViewModel inputModel)
         {
             if (ModelState.IsValid)
             {
@@ -104,7 +104,7 @@ namespace MoviesApp.Controllers
                 FirstName = m.FirstName,
                 LastName = m.LastName,
                 BirthDate = m.BirthDate
-            }).FirstOrDefault();
+            }).First();
 
             if (editModel == null)
             {
@@ -119,7 +119,7 @@ namespace MoviesApp.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, [Bind("Title,ReleaseDate,Genre,Price")] EditActorViewModel editModel)
+        public IActionResult Edit(int id, [Bind("FirstName,LastName,BirthDate")] EditActorViewModel editModel)
         {
             if (ModelState.IsValid)
             {
