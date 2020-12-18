@@ -1,108 +1,144 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MoviesApp.Data;
 using MoviesApp.Models;
+using MoviesApp.ViewModels;
 
 namespace MoviesApp.Controllers
 {
     public class ActorsController : Controller
     {
         private readonly MoviesContext _context;
+        private readonly ILogger<HomeController> _logger;
 
-        public ActorsController(MoviesContext context)
+
+        public ActorsController(MoviesContext context, ILogger<HomeController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
-        // GET: Actors
-        public async Task<IActionResult> Index()
+        // GET: Movies
+        [HttpGet]
+        public IActionResult Index()
         {
-            return View(await _context.Actors.ToListAsync());
+            return View(_context.Actors.Select(m => new ActorViewModel
+            {
+                Id = m.Id,
+                FirstName = m.FirstName,
+                LastName=m.LastName,
+                BirthDate=m.BirthDate
+            }).ToList());
+            
         }
 
-        // GET: Actors/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Movies/Details/5
+        [HttpGet]
+        public IActionResult Details(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (actor == null)
+            var viewModel = _context.Actors.Where(m => m.Id == id).Select(m => new ActorViewModel
+            {
+                Id = m.Id,
+                FirstName = m.FirstName,
+                LastName = m.LastName,
+                BirthDate = m.BirthDate
+            }).FirstOrDefault();
+
+
+            if (viewModel == null)
             {
                 return NotFound();
             }
 
-            return View(actor);
+            return View(viewModel);
         }
 
-        // GET: Actors/Create
+        // GET: Movies/Create
+        [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Actors/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Movies/Create
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,BirthDate")] Actor actor)
+        public IActionResult Create([Bind("Title,ReleaseDate,Genre,Price")] InputActorViewModel inputModel)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(actor);
-                await _context.SaveChangesAsync();
+                _context.Add(new Actor
+                {
+                    FirstName = inputModel.FirstName,
+                    LastName = inputModel.LastName,
+                    BirthDate = inputModel.BirthDate
+                });
+                _context.SaveChanges();
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(actor);
+            return View(inputModel);
         }
 
-        // GET: Actors/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        [HttpGet]
+        // GET: Movies/Edit/5
+        public IActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors.FindAsync(id);
-            if (actor == null)
+            var editModel = _context.Actors.Where(m => m.Id == id).Select(m => new EditActorViewModel
+            {
+                FirstName = m.FirstName,
+                LastName = m.LastName,
+                BirthDate = m.BirthDate
+            }).FirstOrDefault();
+
+            if (editModel == null)
             {
                 return NotFound();
             }
-            return View(actor);
+
+            return View(editModel);
         }
 
-        // POST: Actors/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to, for 
-        // more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Movies/Edit/5
+        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,BirthDate")] Actor actor)
+        public IActionResult Edit(int id, [Bind("Title,ReleaseDate,Genre,Price")] EditActorViewModel editModel)
         {
-            if (id != actor.Id)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
+                    var actor = new Actor
+                    {
+                        Id = id,
+                        FirstName = editModel.FirstName,
+                        LastName = editModel.LastName,
+                        BirthDate = editModel.BirthDate,
+                    };
+
                     _context.Update(actor);
-                    await _context.SaveChangesAsync();
+                    _context.SaveChanges();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException)
                 {
-                    if (!ActorExists(actor.Id))
+                    if (!ActorExists(id))
                     {
                         return NotFound();
                     }
@@ -113,35 +149,42 @@ namespace MoviesApp.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(actor);
+            return View(editModel);
         }
 
-        // GET: Actors/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        [HttpGet]
+        // GET: Movies/Delete/5
+        public IActionResult Delete(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var actor = await _context.Actors
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (actor == null)
+            var deleteModel = _context.Actors.Where(m => m.Id == id).Select(m => new DeleteActorViewModel
+            {
+                FirstName = m.FirstName,
+                LastName = m.LastName,
+                BirthDate = m.BirthDate
+            }).FirstOrDefault();
+
+            if (deleteModel == null)
             {
                 return NotFound();
             }
 
-            return View(actor);
+            return View(deleteModel);
         }
 
-        // POST: Actors/Delete/5
+        // POST: Movies/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            var actor = await _context.Actors.FindAsync(id);
+            var actor = _context.Actors.Find(id);
             _context.Actors.Remove(actor);
-            await _context.SaveChangesAsync();
+            _context.SaveChanges();
+            _logger.LogError($"Actor with id {actor.Id} has been deleted!");
             return RedirectToAction(nameof(Index));
         }
 
