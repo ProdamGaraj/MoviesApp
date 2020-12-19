@@ -22,7 +22,7 @@ namespace MoviesApp.Midlewares
         {
             if (httpContext.Request.Path.Value.ToLower().Contains("/actors"))
             {
-                logger.LogDebug($"Actor Request: {httpContext.Request.Path.Value}, Method={httpContext.Request.Method}");
+                logger.LogDebug($"Actor Request= {httpContext.Request.Path.Value}, Method={httpContext.Request.Method}");
             }
             await this.next(httpContext);
         }
