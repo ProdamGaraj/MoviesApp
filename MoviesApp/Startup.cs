@@ -32,7 +32,7 @@ namespace MoviesApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews(options=> {
-                options.Filters.Add(typeof(ActorsAgeFilter));
+
             });
 
             services.AddDbContext<MoviesContext>(options =>
