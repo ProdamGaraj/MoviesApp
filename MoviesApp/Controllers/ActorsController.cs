@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,26 +15,22 @@ namespace MoviesApp.Controllers
     {
         private readonly MoviesContext _context;
         private readonly ILogger<HomeController> _logger;
+        private readonly IMapper _mapper;
 
 
-        public ActorsController(MoviesContext context, ILogger<HomeController> logger)
+        public ActorsController(MoviesContext context, ILogger<HomeController> logger, IMapper mapper)
         {
             _context = context;
             _logger = logger;
+            _mapper = mapper;
         }
 
         // GET: Movies
         [HttpGet]
         public IActionResult Index()
         {
-            return View(_context.Actors.Select(m => new ActorViewModel
-            {
-                Id = m.Id,
-                FirstName = m.FirstName,
-                LastName=m.LastName,
-                BirthDate=m.BirthDate
-            }).ToList());
-            
+            return View(_mapper.Map<IEnumerable<Actor>, IEnumerable<ActorViewModel>>(_context.Actors.ToList()));
+
         }
 
         // GET: Movies/Details/5
@@ -44,13 +42,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var viewModel = _context.Actors.Where(m => m.Id == id).Select(m => new ActorViewModel
-            {
-                Id = m.Id,
-                FirstName = m.FirstName,
-                LastName = m.LastName,
-                BirthDate = m.BirthDate
-            }).FirstOrDefault();
+            var viewModel = _mapper.Map<Actor, ActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
 
 
             if (viewModel == null)
@@ -77,12 +69,8 @@ namespace MoviesApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(new Actor
-                {
-                    FirstName = inputModel.FirstName,
-                    LastName = inputModel.LastName,
-                    BirthDate = inputModel.BirthDate
-                });
+                var actor = _mapper.Map<InputActorViewModel, Actor>(inputModel);
+                _context.Add(actor);
                 _context.SaveChanges();
 
                 return RedirectToAction(nameof(Index));
@@ -99,12 +87,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var editModel = _context.Actors.Where(m => m.Id == id).Select(m => new EditActorViewModel
-            {
-                FirstName = m.FirstName,
-                LastName = m.LastName,
-                BirthDate = m.BirthDate
-            }).First();
+            var editModel = _mapper.Map<Actor, EditActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
 
             if (editModel == null)
             {
@@ -125,13 +108,8 @@ namespace MoviesApp.Controllers
             {
                 try
                 {
-                    var actor = new Actor
-                    {
-                        Id = id,
-                        FirstName = editModel.FirstName,
-                        LastName = editModel.LastName,
-                        BirthDate = editModel.BirthDate,
-                    };
+                    var actor = _mapper.Map<EditActorViewModel, Actor>(editModel);
+                    actor.Id = id;
 
                     _context.Update(actor);
                     _context.SaveChanges();
@@ -161,12 +139,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var deleteModel = _context.Actors.Where(m => m.Id == id).Select(m => new DeleteActorViewModel
-            {
-                FirstName = m.FirstName,
-                LastName = m.LastName,
-                BirthDate = m.BirthDate
-            }).FirstOrDefault();
+            var deleteModel = _mapper.Map<Actor, DeleteActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
 
             if (deleteModel == null)
             {

@@ -9,22 +9,26 @@ namespace MoviesApp.Midlewares
 {
     public class ActorControllerLogger
     {
-        private readonly RequestDelegate next;
-        private readonly ILogger<ActorControllerLogger> logger;
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ActorControllerLogger> _logger;
 
         public ActorControllerLogger(RequestDelegate next, ILoggerFactory loggerFac)
         {
-            this.next = next;
-            this.logger = loggerFac.CreateLogger<ActorControllerLogger>();
+            _next = next;
+            _logger = loggerFac.CreateLogger<ActorControllerLogger>();
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
         {
             if (httpContext.Request.Path.Value.ToLower().Contains("/actors"))
             {
-                logger.LogDebug($"Actor Request= {httpContext.Request.Path.Value}, Method={httpContext.Request.Method}");
+                _logger.LogTrace($"Actor Request= {httpContext.Request.Path.Value}, Method={httpContext.Request.Method}");
+                await _next(httpContext);
             }
-            await this.next(httpContext);
+            else
+            {
+                await _next(httpContext);
+            }
         }
 
     }
