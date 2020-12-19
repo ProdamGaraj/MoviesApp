@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MoviesApp.Data;
+using MoviesApp.Midlewares;
 
 namespace MoviesApp
 {
@@ -40,6 +41,7 @@ namespace MoviesApp
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseLogger();
             }
 
             app.UseHttpsRedirection();
@@ -69,6 +71,9 @@ namespace MoviesApp
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            
+
         }
     }
 }
