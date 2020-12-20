@@ -1,26 +1,26 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MoviesApp.Data;
 using MoviesApp.Models;
+using MoviesApp.Services;
+using MoviesApp.Services.Dto;
 using MoviesApp.ViewModels;
 
 namespace MoviesApp.Controllers
 {
     public class MoviesController: Controller
     {
-        private readonly MoviesContext _context;
+        private readonly IMovieService _service;
         private readonly ILogger<HomeController> _logger;
         private readonly IMapper _mapper;
 
 
-        public MoviesController(MoviesContext context, ILogger<HomeController> logger, IMapper mapper)
+        public MoviesController(IMovieService service, ILogger<HomeController> logger, IMapper mapper)
         {
-            _context = context;
+            _service = service;
             _logger = logger;
             _mapper = mapper;
         }
@@ -29,7 +29,7 @@ namespace MoviesApp.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(_mapper.Map<IEnumerable<Movie>, IEnumerable<MovieViewModel>>(_context.Movies.ToList()));
+            return View(_mapper.Map<IEnumerable<MovieDto>, IEnumerable<MovieViewModel>>(_service.GetAllMovies()));
         }
 
         // GET: Movies/Details/5
@@ -41,7 +41,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var viewModel = _mapper.Map<Movie, MovieViewModel>(_context.Movies.FirstOrDefault(m => m.Id == id));
+            var viewModel = _mapper.Map<MovieViewModel>(_service.GetMovie((int) id));
 
 
             if (viewModel == null)
@@ -68,10 +68,7 @@ namespace MoviesApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                var movie = _mapper.Map<InputMovieViewModel, Movie>(inputModel);
-                _context.Add(movie);
-                _context.SaveChanges();
-
+                _service.AddMovie(_mapper.Map<MovieDto>(inputModel));
                 return RedirectToAction(nameof(Index));
             }
             return View(inputModel);
@@ -86,7 +83,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var editModel = _mapper.Map<Movie, EditMovieViewModel>(_context.Movies.FirstOrDefault(m => m.Id == id));
+            var editModel = _mapper.Map<EditMovieViewModel>(_service.GetMovie((int)id));
 
             if (editModel == null)
             {
@@ -105,25 +102,14 @@ namespace MoviesApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
-                {
-                    var movie = _mapper.Map<EditMovieViewModel, Movie>(editModel);
-                    movie.Id = id;
 
-                    _context.Update(movie);
-                    _context.SaveChanges();
-                }
-                catch (DbUpdateException)
-                {
-                    if (!MovieExists(id))
+                    var movie = _mapper.Map<MovieDto>(editModel);
+                    movie.Id = id;
+                    var result = _service.UpdateMovie(movie);
+                    if (result==null)
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
-                }
                 return RedirectToAction(nameof(Index));
             }
             return View(editModel);
@@ -138,7 +124,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var deleteModel = _mapper.Map<Movie, DeleteMovieViewModel>(_context.Movies.FirstOrDefault(m => m.Id == id));
+            var deleteModel = _mapper.Map<DeleteMovieViewModel>(_service.GetMovie((int)id));
 
             if (deleteModel == null)
             {
@@ -153,16 +139,13 @@ namespace MoviesApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var movie = _context.Movies.Find(id);
-            _context.Movies.Remove(movie);
-            _context.SaveChanges();
+            var movie = _service.DeleteMovie((int)id);
+            if (movie == null)
+            {
+                return NotFound();
+            }
             _logger.LogError($"Movie: '{movie.Id}' has been deleted!");
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool MovieExists(int id)
-        {
-            return _context.Movies.Any(e => e.Id == id);
         }
     }
 }

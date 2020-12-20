@@ -8,20 +8,22 @@ using Microsoft.Extensions.Logging;
 using MoviesApp.Data;
 using MoviesApp.Filters;
 using MoviesApp.Models;
+using MoviesApp.Services;
 using MoviesApp.ViewModels;
+using MoviesApp.Services.Dto;
 
 namespace MoviesApp.Controllers
 {
     public class ActorsController : Controller
     {
-        private readonly MoviesContext _context;
+        private readonly IActorService _service;
         private readonly ILogger<HomeController> _logger;
         private readonly IMapper _mapper;
 
 
-        public ActorsController(MoviesContext context, ILogger<HomeController> logger, IMapper mapper)
+        public ActorsController(IActorService service, ILogger<HomeController> logger, IMapper mapper)
         {
-            _context = context;
+            _service = service;
             _logger = logger;
             _mapper = mapper;
         }
@@ -30,7 +32,7 @@ namespace MoviesApp.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(_mapper.Map<IEnumerable<Actor>, IEnumerable<ActorViewModel>>(_context.Actors.ToList()));
+            return View(_mapper.Map<IEnumerable<ActorDto>, IEnumerable<ActorViewModel>>(_service.GetAllActors()));
 
         }
 
@@ -43,7 +45,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var viewModel = _mapper.Map<Actor, ActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
+            var viewModel = _mapper.Map<ActorViewModel>(_service.GetActor((int)id));
 
 
             if (viewModel == null)
@@ -71,10 +73,7 @@ namespace MoviesApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                var actor = _mapper.Map<InputActorViewModel, Actor>(inputModel);
-                _context.Add(actor);
-                _context.SaveChanges();
-
+                _service.AddActor(_mapper.Map<ActorDto>(inputModel));
                 return RedirectToAction(nameof(Index));
             }
             return View(inputModel);
@@ -88,9 +87,7 @@ namespace MoviesApp.Controllers
             {
                 return NotFound();
             }
-
-            var editModel = _mapper.Map<Actor, EditActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
-
+            var editModel = _mapper.Map<EditActorViewModel>(_service.GetActor((int)id));
             if (editModel == null)
             {
                 return NotFound();
@@ -109,24 +106,12 @@ namespace MoviesApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                try
+                var actor = _mapper.Map<ActorDto>(editModel);
+                actor.Id = id;
+                var result = _service.UpdateActor(actor);
+                if (actor == null)
                 {
-                    var actor = _mapper.Map<EditActorViewModel, Actor>(editModel);
-                    actor.Id = id;
-
-                    _context.Update(actor);
-                    _context.SaveChanges();
-                }
-                catch (DbUpdateException)
-                {
-                    if (!ActorExists(id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -142,7 +127,7 @@ namespace MoviesApp.Controllers
                 return NotFound();
             }
 
-            var deleteModel = _mapper.Map<Actor, DeleteActorViewModel>(_context.Actors.FirstOrDefault(a => a.Id == id));
+            var deleteModel = _mapper.Map<DeleteActorViewModel>(_service.GetActor((int)id));
 
             if (deleteModel == null)
             {
@@ -157,16 +142,13 @@ namespace MoviesApp.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {
-            var actor = _context.Actors.Find(id);
-            _context.Actors.Remove(actor);
-            _context.SaveChanges();
+            var actor = _service.DeleteActor((int)id);
+            if (actor == null)
+            {
+                return NotFound();
+            }
             _logger.LogError($"Actor with id {actor.Id} has been deleted!");
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool ActorExists(int id)
-        {
-            return _context.Actors.Any(e => e.Id == id);
         }
     }
 }

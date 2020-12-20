@@ -13,8 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MoviesApp.Data;
-using MoviesApp.Filters;
 using MoviesApp.Midlewares;
+using MoviesApp.Services;
 
 namespace MoviesApp
 {
@@ -32,13 +32,14 @@ namespace MoviesApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews(options=> {
-
             });
 
             services.AddDbContext<MoviesContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("MoviesContext")));
 
             services.AddAutoMapper(typeof(Startup));
+            services.AddScoped<IActorService, ActorService>();
+            services.AddScoped<IMovieService, MovieService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,9 +78,6 @@ namespace MoviesApp
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-
-            
-
         }
     }
 }
