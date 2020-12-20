@@ -20,7 +20,7 @@ namespace MoviesApp.Controllers
     {
         private readonly IActorService _service;
 
-        public ActorsApiController(IActorService service, IMapper mapper)
+        public ActorsApiController(IActorService service)
         {
             _service = service;
         }
