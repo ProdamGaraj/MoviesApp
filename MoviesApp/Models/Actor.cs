@@ -8,6 +8,10 @@ namespace MoviesApp.Models
 {
     public class Actor
     {
+        public Actor()
+        {
+            Movies = new HashSet<MovieActor>();
+        }
         public int Id { get; set; }
 
         public string FirstName { get; set; }
@@ -16,5 +20,7 @@ namespace MoviesApp.Models
 
         [DataType(DataType.Date)]
         public DateTime BirthDate { get; set; }
+
+        public virtual ICollection<MovieActor> Movies { get; set; }
     }
 }

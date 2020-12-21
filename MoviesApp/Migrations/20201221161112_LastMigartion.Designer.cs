@@ -10,8 +10,8 @@ using MoviesApp.Data;
 namespace MoviesApp.Migrations
 {
     [DbContext(typeof(MoviesContext))]
-    [Migration("20201220212649_mig")]
-    partial class mig
+    [Migration("20201221161112_LastMigartion")]
+    partial class LastMigartion
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -268,6 +268,21 @@ namespace MoviesApp.Migrations
                     b.ToTable("Movies");
                 });
 
+            modelBuilder.Entity("MoviesApp.Models.MovieActor", b =>
+                {
+                    b.Property<int>("ActorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ActorId", "MovieId");
+
+                    b.HasIndex("MovieId");
+
+                    b.ToTable("MovieActors");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -315,6 +330,21 @@ namespace MoviesApp.Migrations
                     b.HasOne("MoviesApp.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("MoviesApp.Models.MovieActor", b =>
+                {
+                    b.HasOne("MoviesApp.Models.Actor", "Actors")
+                        .WithMany("Movies")
+                        .HasForeignKey("ActorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MoviesApp.Models.Movie", "Movies")
+                        .WithMany("Actors")
+                        .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
